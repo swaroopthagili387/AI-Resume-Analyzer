@@ -1,10 +1,9 @@
 package com.sai.airesumeanalyzer.entity;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "resume_analysis")
+@Table(name = "resume_analyses")
 public class ResumeAnalysis {
 
     @Id
@@ -13,67 +12,34 @@ public class ResumeAnalysis {
 
     private String fileName;
 
-    @Column(length = 2000)
+    @Column(columnDefinition = "LONGTEXT")
     private String detectedSkills;
 
-    @Column(length = 2000)
+    @Column(columnDefinition = "LONGTEXT")
     private String missingSkills;
+
+    @Column(columnDefinition = "LONGTEXT")
+    private String improvementAdvice; // <-- NEW FIELD
 
     private int score;
 
-    private LocalDateTime uploadedAt;
+    // --- Getters and Setters ---
 
-    public ResumeAnalysis() {
-        this.uploadedAt = LocalDateTime.now();
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    // Getters and Setters
+    public String getFileName() { return fileName; }
+    public void setFileName(String fileName) { this.fileName = fileName; }
 
-    public Long getId() {
-        return id;
-    }
+    public String getDetectedSkills() { return detectedSkills; }
+    public void setDetectedSkills(String detectedSkills) { this.detectedSkills = detectedSkills; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getMissingSkills() { return missingSkills; }
+    public void setMissingSkills(String missingSkills) { this.missingSkills = missingSkills; }
 
-    public String getFileName() {
-        return fileName;
-    }
+    public String getImprovementAdvice() { return improvementAdvice; }
+    public void setImprovementAdvice(String improvementAdvice) { this.improvementAdvice = improvementAdvice; }
 
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
-
-    public String getDetectedSkills() {
-        return detectedSkills;
-    }
-
-    public void setDetectedSkills(String detectedSkills) {
-        this.detectedSkills = detectedSkills;
-    }
-
-    public String getMissingSkills() {
-        return missingSkills;
-    }
-
-    public void setMissingSkills(String missingSkills) {
-        this.missingSkills = missingSkills;
-    }
-
-    public int getScore() {
-        return score;
-    }
-
-    public void setScore(int score) {
-        this.score = score;
-    }
-
-    public LocalDateTime getUploadedAt() {
-        return uploadedAt;
-    }
-
-    public void setUploadedAt(LocalDateTime uploadedAt) {
-        this.uploadedAt = uploadedAt;
-    }
+    public int getScore() { return score; }
+    public void setScore(int score) { this.score = score; }
 }

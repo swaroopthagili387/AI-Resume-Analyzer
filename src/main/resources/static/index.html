@@ -1,21 +1,350 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Resume Analyzer</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-green: #22c55e;
+            --accent-red: #ef4444;
+            --accent-blue: #3b82f6;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border-color: #334155;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        header {
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        header p {
+            color: var(--text-secondary);
+        }
+
+        /* Upload Area */
+        .upload-card {
+            background-color: var(--card-bg);
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s ease, background-color 0.2s ease;
+        }
+
+        .upload-card:hover, .upload-card.dragover {
+            border-color: var(--accent-blue);
+            background-color: #1e293b80;
+        }
+
+        .upload-card p {
+            margin: 0.5rem 0;
+            color: var(--text-secondary);
+        }
+
+        .btn-upload {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.6rem 1.4rem;
+            background-color: var(--accent-blue);
+            color: white;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* Results Dashboard */
+        .results-grid {
+            display: none;
+            grid-template-columns: 280px 1fr;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .full-width-card {
+            grid-column: 1 / -1;
+        }
+
+        /* Score Meter */
+        .score-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: conic-gradient(var(--accent-blue) calc(var(--score) * 1%), var(--border-color) 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 1rem 0;
+            position: relative;
+        }
+
+        .score-circle-inner {
+            width: 95px;
+            height: 95px;
+            border-radius: 50%;
+            background-color: var(--card-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        /* Skill Badges & Titles */
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .badge-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .badge {
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background-color: rgba(34, 197, 94, 0.15);
+            color: var(--accent-green);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .badge-warning {
+            background-color: rgba(239, 68, 68, 0.15);
+            color: var(--accent-red);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .advice-text {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin: 0;
+            font-size: 0.95rem;
+            white-space: pre-line;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: none;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--accent-blue);
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            animation: spin 1s linear infinite;
+            margin: 1rem auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
 
-    <h2>Upload Resume</h2>
+<div class="container">
+    <header>
+        <h1>AI Resume Analyzer</h1>
+        <p>Upload your resume PDF to view instant ATS scoring, extracted skills, and AI career advice</p>
+    </header>
 
-    <form action="/upload" method="post" enctype="multipart/form-data">
+    <!-- Upload Card -->
+    <div class="upload-card" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <p><strong>Click to upload</strong> or drag and drop your PDF here</p>
+        <p style="font-size: 0.85rem;">Supports PDF files up to 10MB</p>
+        <button class="btn-upload" type="button">Select File</button>
+        <input type="file" id="fileInput" accept="application/pdf" onchange="handleFileUpload(this.files[0])">
+        <div class="spinner" id="spinner"></div>
+    </div>
 
-        <input type="file" name="file">
+    <!-- Results Dashboard -->
+    <div class="results-grid" id="resultsGrid">
+        
+        <!-- Left: ATS Score Card -->
+        <div class="card score-container">
+            <h3 style="margin: 0; color: var(--text-secondary);">ATS Match Score</h3>
+            <div class="score-circle" id="scoreCircle" style="--score: 0;">
+                <div class="score-circle-inner" id="scoreValue">0%</div>
+            </div>
+            <p id="fileName" style="font-size: 0.85rem; color: var(--text-secondary); word-break: break-all;"></p>
+        </div>
 
-        <br><br>
+        <!-- Right: Extracted Skills Card -->
+        <div class="card">
+            <div class="section-title" style="color: var(--accent-green);">
+                Detected Skills (<span id="detectedCount">0</span>)
+            </div>
+            <div class="badge-group" id="detectedSkillsGroup"></div>
 
-        <button type="submit">Upload Resume</button>
+            <div class="section-title" style="color: var(--accent-red);">
+                Missing / Recommended Skills (<span id="missingCount">0</span>)
+            </div>
+            <div class="badge-group" id="missingSkillsGroup"></div>
+        </div>
 
-    </form>
+        <!-- Bottom: Natural Language AI Feedback Card -->
+        <div class="card full-width-card">
+            <div class="section-title" style="color: var(--accent-blue);">
+                💡 AI Improvement Advice
+            </div>
+            <p class="advice-text" id="adviceText">Analyzing resume details...</p>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const dropZone = document.getElementById('dropZone');
+
+    // Drag-and-drop handling
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => { e.preventDefault(); dropZone.classList.add('dragover'); }, false);
+    });
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); }, false);
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        const file = e.dataTransfer.files[0];
+        if (file && file.type === 'application/pdf') {
+            handleFileUpload(file);
+        } else {
+            alert('Please upload a valid PDF document.');
+        }
+    });
+
+    async function handleFileUpload(file) {
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const spinner = document.getElementById('spinner');
+        spinner.style.display = 'block';
+
+        try {
+            const response = await fetch('http://localhost:8080/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errText = await response.text();
+                throw new Error(errText);
+            }
+
+            const data = await response.json();
+            renderResults(data);
+
+        } catch (error) {
+            alert('Upload failed: ' + error.message);
+        } finally {
+            spinner.style.display = 'none';
+        }
+    }
+
+    function renderResults(data) {
+        // Parse stringified JSON arrays returned by Spring Boot
+        const detectedSkills = JSON.parse(data.detectedSkills || "[]");
+        const missingSkills = JSON.parse(data.missingSkills || "[]");
+
+        // Set Score and File Name
+        document.getElementById('scoreValue').textContent = `${data.score}%`;
+        document.getElementById('scoreCircle').style.setProperty('--score', data.score);
+        document.getElementById('fileName').textContent = data.fileName;
+
+        // Render Detected Skills Badges
+        const detectedGroup = document.getElementById('detectedSkillsGroup');
+        detectedGroup.innerHTML = '';
+        detectedSkills.forEach(skill => {
+            const badge = document.createElement('span');
+            badge.className = 'badge badge-success';
+            badge.textContent = skill;
+            detectedGroup.appendChild(badge);
+        });
+        document.getElementById('detectedCount').textContent = detectedSkills.length;
+
+        // Render Missing Skills Badges
+        const missingGroup = document.getElementById('missingSkillsGroup');
+        missingGroup.innerHTML = '';
+        missingSkills.forEach(skill => {
+            const badge = document.createElement('span');
+            badge.className = 'badge badge-warning';
+            badge.textContent = skill;
+            missingGroup.appendChild(badge);
+        });
+        document.getElementById('missingCount').textContent = missingSkills.length;
+
+        // Render Natural Language Improvement Advice
+        const adviceElement = document.getElementById('adviceText');
+        if (data.improvementAdvice && data.improvementAdvice.trim() !== '') {
+            adviceElement.textContent = data.improvementAdvice;
+        } else {
+            adviceElement.textContent = "No specific improvement advice generated for this resume.";
+        }
+
+        // Show Results Section
+        document.getElementById('resultsGrid').style.display = 'grid';
+    }
+</script>
 
 </body>
 </html>
