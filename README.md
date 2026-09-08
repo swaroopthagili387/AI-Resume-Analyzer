@@ -1,1 +1,1 @@
-# AI-Resume-Analyzer
+An intelligent, RESTful Spring Boot application that automates resume screening and candidate evaluation. The system extracts text from PDF resumes using Apache PDFBox, processes the content using the Google Gemini API (Gemini 2.5 Flash) with structured JSON schemas, and persists analysis metrics into a MySQL database via Spring Data JPA.
